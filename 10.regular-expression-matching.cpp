@@ -84,6 +84,11 @@
 class Solution {
 public:
     bool isMatch(string s, string p) {
-        
+			int i = 0;
+			int j = 0;
+			while(i < s.size() && ) {
+				
+			}
+			return true;
     }
 };
