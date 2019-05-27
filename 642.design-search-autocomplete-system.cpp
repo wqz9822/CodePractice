@@ -108,6 +108,8 @@
  */
 struct Node {
   Node *dict[128];
+  vector<char> child;
+  std::string word;
   int times = 0;
 };
 
@@ -121,9 +123,11 @@ public:
       if (!cur->dict[c]) {
         cur->dict[c] = new Node();
       }
+      cur->child.push_back(c);
       cur = cur->dict[c];
     }
     cur->times += times;
+    cur->word = word;
   }
 
   int is_in(const std::string &word) {
@@ -138,6 +142,18 @@ public:
     return cur->times;
   }
 
+  void find_child(const Node *node, vector<pair<int, string>> &res) {
+    if (!node) {
+      return;
+    }
+    if (node->times > 0) {
+      res.emplace_back(node->times, node->word);
+    }
+    for (const auto &c : node->child) {
+      find_child(node->dict[c], res);
+    }
+  }
+
 private:
   Node *root;
 };
@@ -149,7 +165,8 @@ public:
     for (int i = 0; i < sentences.size(); ++i) {
       trie.add(sentences[i], times[i]);
     }
-
+    vector<int, string> res;
+    trie.find_child(
   }
 
   vector<string> input(char c) { return vector<string>(); }
