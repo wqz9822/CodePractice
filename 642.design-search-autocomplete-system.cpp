@@ -3,13 +3,9 @@
  *
  * [642] Design Search Autocomplete System
  *
- * https://leetcode.com/problems/design-search-autocomplete-system/description/
- *
  * algorithms
  * Hard (35.86%)
  * Total Accepted:    22.5K
- * Total Submissions: 59.7K
- * Testcase Example:
  * '["AutocompleteSystem","input","input","input","input"]\n[[["i love
  * you","island","iroman","i love leetcode"],[5,3,2,2]],["i"],["
  * "],["a"],["#"]]'
@@ -107,55 +103,88 @@
  *
  */
 struct Node {
-  Node *dict[128];
-  vector<char> child;
+  unordered_map<char, Node *> map;
   std::string word;
   int times = 0;
 };
 
 class TrieTree {
 public:
-  TrieTree() { root = new Node(); }
+  TrieTree() : root_(new Node()), cur_(root_) {}
 
   void add(const std::string &word, int times = 1) {
-    Node *cur = root;
+    Node *cur = root_;
     for (const auto &c : word) {
-      if (!cur->dict[c]) {
-        cur->dict[c] = new Node();
+      if (!cur->map.count(c)) {
+        cur->map[c] = new Node();
       }
-      cur->child.push_back(c);
-      cur = cur->dict[c];
+      cur = cur->map[c];
     }
     cur->times += times;
     cur->word = word;
   }
 
   int is_in(const std::string &word) {
-    Node *cur = root;
+    Node *cur = root_;
     for (const auto &c : word) {
-      if (!cur->dict[c]) {
+      if (!cur->map.count(c)) {
         return 0;
       }
-      cur = cur->dict[c];
+      cur = cur->map[c];
     }
-
     return cur->times;
   }
 
-  void find_child(const Node *node, vector<pair<int, string>> &res) {
-    if (!node) {
+  using s_pair = pair<int, string>;
+
+  vector<string> on_type(const char c) {
+    vector<string> res;
+    if (c == '#' && cur_) {
+      cur_->times++;
+      cur_->word = cur_word_;
+      cur_ = root_;
+      cur_word_.clear();
+    } else {
+      cur_word_.push_back(c);
+      if (cur_->map.count(c)) {
+        vector<s_pair> suffix;
+        find_suffix(cur_->map[c], &suffix);
+        sort_result(&suffix, &res);
+      } else {
+        cur_->map[c] = new Node();
+      }
+      cur_ = cur_->map[c];
+    }
+    return res;
+  }
+
+  void find_suffix(const Node *node, vector<s_pair> *suffix) {
+    if (!node || !suffix) {
       return;
     }
     if (node->times > 0) {
-      res.emplace_back(node->times, node->word);
+      // cout << node->times << ", " << node->word << "; " << endl;
+      suffix->emplace_back(node->times, node->word);
     }
-    for (const auto &c : node->child) {
-      find_child(node->dict[c], res);
+    for (const auto &n : node->map) {
+      find_suffix(n.second, suffix);
+    }
+  }
+
+  void sort_result(vector<s_pair> *suffix, vector<string> *res) {
+    std::sort(suffix->begin(), suffix->end(),
+              [](const s_pair &p1, const s_pair &p2) -> bool {
+                return p1.first > p2.first;
+              });
+    for (const auto &_s : *suffix) {
+      res->push_back(_s.second);
     }
   }
 
 private:
-  Node *root;
+  string cur_word_;
+  Node *root_;
+  Node *cur_;
 };
 
 class AutocompleteSystem {
@@ -165,11 +194,9 @@ public:
     for (int i = 0; i < sentences.size(); ++i) {
       trie.add(sentences[i], times[i]);
     }
-    vector<int, string> res;
-    trie.find_child(
   }
 
-  vector<string> input(char c) { return vector<string>(); }
+  vector<string> input(char c) { return trie.on_type(c); }
 
 private:
   TrieTree trie;
