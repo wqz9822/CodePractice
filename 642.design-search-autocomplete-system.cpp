@@ -103,34 +103,34 @@
  *
  */
 struct Node {
-  unordered_map<char, Node *> map;
+  unordered_map<char, unique_ptr<Node>> map;
   std::string word;
   int times = 0;
 };
 
 class TrieTree {
 public:
-  TrieTree() : root_(new Node()), cur_(root_) {}
+  TrieTree() : root_(make_unique<Node>()), cur_(root_.get()), cur_word_("") {}
 
   void add(const std::string &word, int times = 1) {
-    Node *cur = root_;
+    Node *cur = root_.get();
     for (const auto &c : word) {
       if (!cur->map.count(c)) {
-        cur->map[c] = new Node();
+        cur->map[c] = make_unique<Node>();
       }
-      cur = cur->map[c];
+      cur = cur->map[c].get();
     }
     cur->times += times;
     cur->word = word;
   }
 
   int is_in(const std::string &word) {
-    Node *cur = root_;
+    Node *cur = root_.get();
     for (const auto &c : word) {
       if (!cur->map.count(c)) {
         return 0;
       }
-      cur = cur->map[c];
+      cur = cur->map[c].get();
     }
     return cur->times;
   }
@@ -142,18 +142,18 @@ public:
     if (c == '#' && cur_) {
       cur_->times++;
       cur_->word = cur_word_;
-      cur_ = root_;
+      cur_ = root_.get();
       cur_word_.clear();
     } else {
       cur_word_.push_back(c);
       if (cur_->map.count(c)) {
         vector<s_pair> suffix;
-        find_suffix(cur_->map[c], &suffix);
+        find_suffix(cur_->map[c].get(), &suffix);
         sort_result(&suffix, &res);
       } else {
-        cur_->map[c] = new Node();
+        cur_->map[c] = make_unique<Node>();
       }
-      cur_ = cur_->map[c];
+      cur_ = cur_->map[c].get();
     }
     return res;
   }
@@ -167,7 +167,7 @@ public:
       suffix->emplace_back(node->times, node->word);
     }
     for (const auto &n : node->map) {
-      find_suffix(n.second, suffix);
+      find_suffix(n.second.get(), suffix);
     }
   }
 
@@ -182,9 +182,9 @@ public:
   }
 
 private:
-  string cur_word_;
-  Node *root_;
+  const unique_ptr<Node> root_;
   Node *cur_;
+  string cur_word_;
 };
 
 class AutocompleteSystem {
