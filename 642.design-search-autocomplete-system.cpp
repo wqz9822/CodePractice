@@ -108,6 +108,14 @@ struct Node {
   int times = 0;
 };
 
+struct s_pair {
+  s_pair(int times_, int len_, const char *s_)
+      : times(times_), len(len_), s(s_) {}
+  int times;
+  size_t len;
+  const char *s;
+};
+
 class TrieTree {
 public:
   TrieTree() : root_(make_unique<Node>()), cur_(root_.get()), cur_word_("") {}
@@ -135,15 +143,12 @@ public:
     return cur->times;
   }
 
-  using s_pair = pair<int, string>;
-
   vector<string> on_type(const char c) {
     vector<string> res;
     if (c == '#' && cur_) {
       cur_->times++;
-      cur_->word = cur_word_;
+      cur_->word = std::move(cur_word_);
       cur_ = root_.get();
-      cur_word_.clear();
     } else {
       cur_word_.push_back(c);
       if (cur_->map.count(c)) {
@@ -163,8 +168,7 @@ public:
       return;
     }
     if (node->times > 0) {
-      // cout << node->times << ", " << node->word << "; " << endl;
-      suffix->emplace_back(node->times, node->word);
+      suffix->emplace_back(node->times, node->word.size(), node->word.c_str());
     }
     for (const auto &n : node->map) {
       find_suffix(n.second.get(), suffix);
@@ -172,12 +176,25 @@ public:
   }
 
   void sort_result(vector<s_pair> *suffix, vector<string> *res) {
+    if (!suffix || !res || suffix->empty()) {
+      return;
+    }
     std::sort(suffix->begin(), suffix->end(),
               [](const s_pair &p1, const s_pair &p2) -> bool {
-                return p1.first > p2.first;
+                if (p1.times == p2.times) {
+                  for (int i = 0; i < min(p1.len, p2.len); ++i) {
+                    if (p1.s[i] == p2.s[i]) {
+                      continue;
+                    }
+                    return p1.s[i] < p2.s[i];
+                  }
+                  return p1.len < p2.len;
+                }
+                return p1.times > p2.times;
               });
-    for (const auto &_s : *suffix) {
-      res->push_back(_s.second);
+
+    for (int i = 0; i < std::min(static_cast<int>(suffix->size()), 3); ++i) {
+      res->emplace_back((*suffix)[i].s, (*suffix)[i].len);
     }
   }
 
