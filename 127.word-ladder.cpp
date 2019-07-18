@@ -65,76 +65,85 @@
  *
  */
 struct node {
-  node(int level_, const std::string &word_) : level(level_), word(word_) {}
+  node(int level_, int word_id_) : level(level_), word_id(word_id_) {}
   int level = 0;
-  std::string word;
+  int word_id = 0;
 };
 
 class Solution {
 public:
   int ladderLength(const string &beginWord, const string &endWord,
                    const vector<string> &wordList) {
-    if (find(wordList.begin(), wordList.end(), endWord) == wordList.end()) {
+    int end_id = buildDict(beginWord, endWord, wordList);
+    if (end_id < 0) {
       return 0;
     }
-    int minPath = INT_MAX;
-    bool hasResult = false;
-    unordered_set<string> hasVisited;
+    vector<bool> hasVisited(wordList.size() + 1, false);
     queue<node> searchQueue;
-    searchQueue.emplace(1, beginWord);
+    searchQueue.emplace(1, wordList.size());
     while (!searchQueue.empty()) {
       auto &cur = searchQueue.front();
-      if (cur.word == endWord) {
-        minPath = min(minPath, cur.level);
-        hasResult = true;
-        cout << "has result: " << minPath << endl;
-        searchQueue.pop();
-        continue;
+      if (cur.word_id == end_id) {
+        return cur.level;
       }
-      hasVisited.insert(cur.word);
+      hasVisited[cur.word_id] = true;
       // push all words not visited with distance 1
-      const auto nextWords = findOneDist(cur.word, hasVisited, wordList);
-      for (const auto &word : nextWords) {
-        // cout << cur.word << "," << cur.level + 1 << "," << word << endl;
-        if (!hasResult || (cur.level < minPath - 1)) {
-          searchQueue.emplace(cur.level + 1, word);
-        }
+      const auto nextWords = findOneDist(cur.word_id, hasVisited, wordList);
+      for (const auto word : nextWords) {
+        // `cout << wordList[cur.word_id] << "," << cur.level + 1 << ","
+        // << wordList[word] << endl;
+        searchQueue.emplace(cur.level + 1, word);
+        hasVisited[word] = true;
       }
       searchQueue.pop();
     }
-    return hasResult ? minPath : 0;
+    return 0;
   }
 
 private:
-  unordered_map<string, unordered_map<string, int>> memo;
+  unordered_map<int, unordered_set<int>> dict;
 
-  int dist(const string &word1, const string &word2) {
-    if (memo.count(word1) > 0 && memo[word1].count(word2) > 0) {
-      return memo[word1][word2];
-    }
-    if (memo.count(word2) > 0 && memo[word2].count(word1) > 0) {
-      return memo[word2][word1];
-    }
+  bool distOfOne(const string &word1, const string &word2) {
     int diff = 0;
     for (int i = 0; i < word1.size(); ++i) {
       if (word1[i] != word2[i]) {
         diff++;
       }
+      if (diff > 1) {
+        return false;
+      }
     }
-    memo[word1][word2] = diff;
-    memo[word2][word1] = diff;
-    return diff;
+    return diff == 1;
   }
 
-  vector<string> findOneDist(const string &cur,
-                             const unordered_set<string> &hasVisited,
-                             const vector<string> &wordList) {
-    vector<string> res;
-    for (const auto &word : wordList) {
-      if (hasVisited.count(word) == 0) {
-        if (dist(cur, word) == 1) {
-          res.push_back(word);
+  int buildDict(const string &beginWord, const string &endWord,
+                const vector<string> &wordList) {
+    int end_id = -1;
+    for (size_t i = 0; i < wordList.size(); ++i) {
+      const auto &word1 = wordList[i];
+      if (word1 == endWord) {
+        end_id = i;
+      }
+      if (distOfOne(beginWord, word1)) {
+        dict[wordList.size()].insert(i);
+      }
+      for (size_t j = i; j < wordList.size(); ++j) {
+        const auto &word2 = wordList[j];
+        if (distOfOne(word1, word2)) {
+          dict[i].insert(j);
+          dict[j].insert(i);
         }
+      }
+    }
+    return end_id;
+  }
+
+  vector<int> findOneDist(int cur, const vector<bool> &hasVisited,
+                          const vector<string> &wordList) {
+    vector<int> res;
+    for (const auto id : dict[cur]) {
+      if (!hasVisited[id]) {
+        res.push_back(id);
       }
     }
     return res;
