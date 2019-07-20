@@ -65,87 +65,94 @@
  *
  */
 struct node {
-  node(int level_, int word_id_) : level(level_), word_id(word_id_) {}
-  int level = 0;
-  int word_id = 0;
+	node(int level_, string word_) : level(level_), word(word_) {}
+	int level = 0;
+	string word;
+};
+
+struct searchQueue {
+	queue<node> sq;
+			unordered_set<string> hasVisited;
 };
 
 class Solution {
-public:
-  int ladderLength(const string &beginWord, const string &endWord,
-                   const vector<string> &wordList) {
-    int end_id = buildDict(beginWord, endWord, wordList);
-    if (end_id < 0) {
-      return 0;
-    }
-    vector<bool> hasVisited(wordList.size() + 1, false);
-    queue<node> searchQueue;
-    searchQueue.emplace(1, wordList.size());
-    while (!searchQueue.empty()) {
-      auto &cur = searchQueue.front();
-      if (cur.word_id == end_id) {
-        return cur.level;
-      }
-      hasVisited[cur.word_id] = true;
-      // push all words not visited with distance 1
-      const auto nextWords = findOneDist(cur.word_id, hasVisited, wordList);
-      for (const auto word : nextWords) {
-        // `cout << wordList[cur.word_id] << "," << cur.level + 1 << ","
-        // << wordList[word] << endl;
-        searchQueue.emplace(cur.level + 1, word);
-        hasVisited[word] = true;
-      }
-      searchQueue.pop();
-    }
-    return 0;
-  }
+	public:
+		int ladderLength(const string &beginWord, const string &endWord,
+				const vector<string> &wordList) {
+			if(!buildDict(beginWord, endWord, wordList)) {
+				return 0;
+			}
+			unordered_set<string> hasVisited;
+			queue<node> frontQueue;
+			queue<node> backQueue;
+			frontQueue.emplace(1, beginWord);
+			backQueue.emplace(1, endWord);
+			hasVisited_front.insert(beginWord);
+			while (!frontQueue.empty()) {
+				auto &cur_front = frontQueue.front();
+				auto &cur_back = backQueue.front();
+				if (cur_front.word == endWord || cur_back.word == beginWord) {
+					return cur.level;
+				}
+				// push all words not visited with distance 1
+				const auto nextWords = findOneDist(cur.word, hasVisited, wordList);
+				for (const auto& word : nextWords) {
+					// cout << wordList[cur.word_id] << "," << cur.level + 1 << ","
+					// << wordList[word] << endl;
+					frontQueue.emplace(cur.level + 1, word);
+					hasVisited.insert(word);
+				}
+				frontQueue.pop();
+			}
+			return 0;
+		}
 
-private:
-  unordered_map<int, unordered_set<int>> dict;
+	private:
+		unordered_map<string, unordered_set<string>> dict;
 
-  bool distOfOne(const string &word1, const string &word2) {
-    int diff = 0;
-    for (int i = 0; i < word1.size(); ++i) {
-      if (word1[i] != word2[i]) {
-        diff++;
-      }
-      if (diff > 1) {
-        return false;
-      }
-    }
-    return diff == 1;
-  }
+		bool distOfOne(const string &word1, const string &word2) {
+			int diff = 0;
+			for (int i = 0; i < word1.size(); ++i) {
+				if (word1[i] != word2[i]) {
+					diff++;
+				}
+				if (diff > 1) {
+					return false;
+				}
+			}
+			return diff == 1;
+		}
 
-  int buildDict(const string &beginWord, const string &endWord,
-                const vector<string> &wordList) {
-    int end_id = -1;
-    for (size_t i = 0; i < wordList.size(); ++i) {
-      const auto &word1 = wordList[i];
-      if (word1 == endWord) {
-        end_id = i;
-      }
-      if (distOfOne(beginWord, word1)) {
-        dict[wordList.size()].insert(i);
-      }
-      for (size_t j = i; j < wordList.size(); ++j) {
-        const auto &word2 = wordList[j];
-        if (distOfOne(word1, word2)) {
-          dict[i].insert(j);
-          dict[j].insert(i);
-        }
-      }
-    }
-    return end_id;
-  }
+		bool buildDict(const string &beginWord, const string &endWord,
+				const vector<string> &wordList) {
+			bool hasEndWord = false;
+			for (size_t i = 0; i < wordList.size(); ++i) {
+				const auto &word1 = wordList[i];
+				if (word1 == endWord) {
+					hasEndWord = true;
+				}
+				if (distOfOne(beginWord, word1)) {
+					dict[beginWord].insert(word1);
+				}
+				for (size_t j = i + 1; j < wordList.size(); ++j) {
+					const auto &word2 = wordList[j];
+					if (distOfOne(word1, word2)) {
+						dict[word1].insert(word2);
+						dict[word2].insert(word1);
+					}
+				}
+			}
+			return hasEndWord;
+		}
 
-  vector<int> findOneDist(int cur, const vector<bool> &hasVisited,
-                          const vector<string> &wordList) {
-    vector<int> res;
-    for (const auto id : dict[cur]) {
-      if (!hasVisited[id]) {
-        res.push_back(id);
-      }
-    }
-    return res;
-  }
+		vector<string> findOneDist(const string& cur, const unordered_set<string> &hasVisited,
+				const vector<string> &wordList) {
+			vector<string> res;
+			for (const auto& word: dict[cur]) {
+				if (!hasVisited.count(word)) {
+					res.push_back(word);
+				}
+			}
+			return res;
+		}
 };
