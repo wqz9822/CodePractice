@@ -59,7 +59,7 @@
  */
 struct Node {
   Node(int x_, int y_) : x(x_), y(y_) {}
-  bool operator<(const Node &rhs) const {
+  bool operator>(const Node &rhs) const {
     return (x * x + y * y) > (rhs.x * rhs.x) + (rhs.y * rhs.y);
   }
   int x;
@@ -74,15 +74,15 @@ public:
       return res;
     }
     for (const auto &p : points) {
-      pq.push(Node(p[0], p[1]));
+      min_pq.push(Node(p[0], p[1]));
     }
     for (int i = 0; i < K; ++i) {
-      res.push_back(vector<int>{pq.top().x, pq.top().y});
-      pq.pop();
+      res.push_back(vector<int>{min_pq.top().x, min_pq.top().y});
+      min_pq.pop();
     }
     return res;
   }
 
 private:
-  priority_queue<Node> pq;
+  priority_queue<Node, vector<Node>, std::greater<Node>> min_pq;
 };
