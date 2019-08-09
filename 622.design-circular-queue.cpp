@@ -81,9 +81,11 @@ public:
     if (isFull()) {
       return false;
     }
-    size_++;
+    if (size_ != 0) {
+      back_ = (++back_) % capacity_;
+    }
     buf_[back_] = value;
-    back_ = ++back_ % capacity_;
+    size_++;
     return true;
   }
 
@@ -93,7 +95,9 @@ public:
     if (isEmpty()) {
       return false;
     }
-    front_ = ++front_ % capacity_;
+    if (size_ != 1) {
+      front_ = (++front_) % capacity_;
+    }
     size_--;
     return true;
   }
@@ -111,6 +115,7 @@ public:
     if (isEmpty()) {
       return -1;
     }
+    // cout << "back:" << back_ << endl;
     return buf_[back_];
   }
 
@@ -118,10 +123,10 @@ public:
   bool isEmpty() { return size_ == 0; }
 
   /** Checks whether the circular queue is full or not. */
-  bool isFull() { return (back_ + 1) % capacity_ == front_; }
+  bool isFull() { return size_ == capacity_; }
 
 private:
-  int capacity_;
+  const int capacity_;
   int size_;
   int front_;
   int back_;
