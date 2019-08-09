@@ -9,22 +9,23 @@
  * Medium (38.18%)
  * Total Accepted:    30.9K
  * Total Submissions: 76.8K
- * Testcase Example:  '["MyCircularQueue","enQueue","enQueue","enQueue","enQueue","Rear","isFull","deQueue","enQueue","Rear"]\n[[3],[1],[2],[3],[4],[],[],[],[4],[]]'
+ * Testcase Example:
+ * '["MyCircularQueue","enQueue","enQueue","enQueue","enQueue","Rear","isFull","deQueue","enQueue","Rear"]\n[[3],[1],[2],[3],[4],[],[],[],[4],[]]'
  *
  * Design your implementation of the circular queue. The circular queue is a
  * linear data structure in which the operations are performed based on FIFO
  * (First In First Out) principle and the last position is connected back to
  * the first position to make a circle. It is also called "Ring Buffer".
- * 
+ *
  * One of the benefits of the circular queue is that we can make use of the
  * spaces in front of the queue. In a normal queue, once the queue becomes
  * full, we cannot insert the next element even if there is a space in front of
  * the queue. But using the circular queue, we can use the space to store new
  * values.
- * 
+ *
  * Your implementation should support following operations:
- * 
- * 
+ *
+ *
  * MyCircularQueue(k): Constructor, set the size of the queue to be k.
  * Front: Get the front item from the queue. If the queue is empty, return
  * -1.
@@ -36,13 +37,13 @@
  * operation is successful.
  * isEmpty(): Checks whether the circular queue is empty or not.
  * isFull(): Checks whether the circular queue is full or not.
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
  * Example:
- * 
- * 
+ *
+ *
  * MyCircularQueue circularQueue = new MyCircularQueue(3); // set the size to
  * be 3
  * circularQueue.enQueue(1);  // return true
@@ -54,54 +55,77 @@
  * circularQueue.deQueue();  // return true
  * circularQueue.enQueue(4);  // return true
  * circularQueue.Rear();  // return 4
- * 
- * 
- * 
+ *
+ *
+ *
  * Note:
- * 
- * 
+ *
+ *
  * All values will be in the range of [0, 1000].
  * The number of operations will be in the range of [1, 1000].
  * Please do not use the built-in Queue library.
- * 
- * 
+ *
+ *
  */
 class MyCircularQueue {
 public:
-    /** Initialize your data structure here. Set the size of the queue to be k. */
-    MyCircularQueue(int k) {
-        
+  /** Initialize your data structure here. Set the size of the queue to be k. */
+  explicit MyCircularQueue(int k)
+      : capacity_(k), size_(0), front_(0), back_(0) {
+    buf_.resize(k);
+  }
+
+  /** Insert an element into the circular queue. Return true if the operation is
+   * successful. */
+  bool enQueue(int value) {
+    if (isFull()) {
+      return false;
     }
-    
-    /** Insert an element into the circular queue. Return true if the operation is successful. */
-    bool enQueue(int value) {
-        
+    size_++;
+    buf_[back_] = value;
+    back_ = ++back_ % capacity_;
+    return true;
+  }
+
+  /** Delete an element from the circular queue. Return true if the operation is
+   * successful. */
+  bool deQueue() {
+    if (isEmpty()) {
+      return false;
     }
-    
-    /** Delete an element from the circular queue. Return true if the operation is successful. */
-    bool deQueue() {
-        
+    front_ = ++front_ % capacity_;
+    size_--;
+    return true;
+  }
+
+  /** Get the front item from the queue. */
+  int Front() {
+    if (isEmpty()) {
+      return -1;
     }
-    
-    /** Get the front item from the queue. */
-    int Front() {
-        
+    return buf_[front_];
+  }
+
+  /** Get the last item from the queue. */
+  int Rear() {
+    if (isEmpty()) {
+      return -1;
     }
-    
-    /** Get the last item from the queue. */
-    int Rear() {
-        
-    }
-    
-    /** Checks whether the circular queue is empty or not. */
-    bool isEmpty() {
-        
-    }
-    
-    /** Checks whether the circular queue is full or not. */
-    bool isFull() {
-        
-    }
+    return buf_[back_];
+  }
+
+  /** Checks whether the circular queue is empty or not. */
+  bool isEmpty() { return size_ == 0; }
+
+  /** Checks whether the circular queue is full or not. */
+  bool isFull() { return (back_ + 1) % capacity_ == front_; }
+
+private:
+  int capacity_;
+  int size_;
+  int front_;
+  int back_;
+  vector<int> buf_;
 };
 
 /**
