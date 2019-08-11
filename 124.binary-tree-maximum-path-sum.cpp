@@ -56,25 +56,25 @@
  */
 class Solution {
 public:
-  int maxPathSum(TreeNode *root) {}
+  int maxPathSum(TreeNode *root) {
+    findMax(root);
+    return globalMax;
+  }
 
-  int helper(TreeNode *n) {
-    if (!n->left && !n->right) {
-      return n->val;
+  int findMax(TreeNode *n) {
+    if (!n) {
+      return 0;
     }
-    int left_max = 0 int right_max = 0;
-    if (n->left) {
-      left_max = helper(n->left);
-    }
-    if (n->right) {
-      right_max = helper(n->right);
-    }
-    int max = left_max + n->val;
-    max = (right_max + n->val) > max ? right_max + n->val : max;
-    max = (left_max + right_max + n->val) > max ? right_max + n->val : max;
-    return max;
+    int leftMax = max(findMax(n->left), 0);
+    int rightMax = max(findMax(n->right), 0);
+
+    // max result if choose current node as the highest
+    int localMax = n->val + leftMax + rightMax;
+    globalMax = localMax > globalMax ? localMax : globalMax;
+    // return larger one of the path for upper level to build localMax
+    return n->val + max(leftMax, rightMax);
   }
 
 private:
-  int max = 0;
+  int globalMax = INT_MIN;
 };
