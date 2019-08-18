@@ -9,129 +9,67 @@
  * Medium (40.21%)
  * Total Accepted:    325.8K
  * Total Submissions: 797.9K
- * Testcase Example:  '[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]'
+ * Testcase Example:
+ * '[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]'
  *
  * Given a 2d grid map of '1's (land) and '0's (water), count the number of
  * islands. An island is surrounded by water and is formed by connecting
  * adjacent lands horizontally or vertically. You may assume all four edges of
  * the grid are all surrounded by water.
- * 
+ *
  * Example 1:
- * 
- * 
+ *
+ *
  * Input:
  * 11110
  * 11010
  * 11000
  * 00000
- * 
+ *
  * Output: 1
- * 
- * 
+ *
+ *
  * Example 2:
- * 
- * 
+ *
+ *
  * Input:
  * 11000
  * 11000
  * 00100
  * 00011
- * 
+ *
  * Output: 3
- * 
+ *
  */
-struct node {
-  int rank = 0;
-  int parent = -1;
-};
-
-class UnionFind {
-public:
-  UnionFind(size_t num) : num_(num) {
-    list_.resize(num_);
-  }
-  
-  int find(int index) {
-    auto& n = list_[index];
-    if(n.parent == -1) {
-      return index;
-    }
-    n.parent = find(n.parent);
-    return n.parent;
-  }
-  
-  void union_node(int index1, int index2) {
-   //cout << "union" << index1 <<"," << index2 << endl;
- 
-    auto& n1 = list_[index1];
-    auto& n2 = list_[index2];
-    if (n1.rank < n2.rank) {
-      n1.parent = index2;
-    } else if (n1.rank > n2.rank) {
-      n2.parent = index1;
-    } else {
-      n1.parent = index2;
-      n2.rank++;
-    }
-  }
-  
-
-  void print_list() {
-      for(const auto& item : list_) {
-          cout << item.parent << ", " << item.rank << endl;
-      }
-  }
-private:
-  vector<node> list_;
-  size_t num_;
-};
-
 class Solution {
 public:
-    int numIslands(vector<vector<char>>& grid) {
-        if(grid.size() == 0 || grid[0].size() == 0) return 0;
-        m = grid.size();
-        n = grid[0].size();
-        auto uf = UnionFind(m * n);
-        for(int i = 0; i < m; ++i) {
-          for(int j = 0; j < n; ++j) {
-            if(grid[i][j] == '1') {
-              island_num++;
-              union_island(grid, uf, i, j);
-            }
-          }
-        }
-      //uf.print_list();
-      return island_num;
-    }
-    
-    void union_island(const vector<vector<char>>& grid, UnionFind& uf, int i, int j) {
-      for(const auto& d : dirs) {
-        auto i_ = i + d[0];
-        auto j_ = j + d[1];
-        if (in_range(i_, j_) && grid[i_][j_] == '1') {
-          //cout << i << ":" << j << endl;
-          auto index1 = i*n + j;
-          auto index2 = i_*n + j_;
-          auto root1 = uf.find(index1);
-          auto root2 = uf.find(index2);
-          if (root1 != root2) {
-            //cout << i << ", " << j << endl;
-            uf.union_node(root1, root2);
-            island_num--;
-          }
+  int numIslands(vector<vector<char>> &grid) {
+    int res = 0;
+    for (size_t i = 0; i < grid.size(); ++i) {
+      for (size_t j = 0; j < grid[0].size(); ++j) {
+        if (grid[i][j] == '1') {
+          res++;
+          dfs(grid, i, j);
         }
       }
     }
-    
-    bool in_range(int i, int j) {
-      return (i >= 0 && i < m && j >= 0 && j < n);
-    }
-    
+    return res;
+  }
+
 private:
-  int island_num = 0;
-  int m = 0;
-  int n = 0;
-  vector<vector<int>> dirs {{-1,0}, {0,-1}, {1, 0}, {0,1}};
-  vector<bool> visited;
+  const vector<pair<int, int>> DIRS{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+
+  bool inBound(vector<vector<char>> &grid, int r, int c) {
+    return (r >= 0 && r < grid.size() && c >= 0 && c < grid[0].size());
+  }
+
+  void dfs(vector<vector<char>> &grid, int r, int c) {
+    if (!inBound(grid, r, c) || grid[r][c] != '1') {
+      return;
+    }
+    grid[r][c] = '0';
+    for (const auto &dir : DIRS) {
+      dfs(grid, r + dir.first, c + dir.second);
+    }
+  }
 };
