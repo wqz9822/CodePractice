@@ -47,38 +47,62 @@ public:
     if (s.empty()) {
       return vector<string>{""};
     }
-    backtrack(s, &curStr, 0, 0, 0, &maxLen, res);
+    auto pairToRemove = getMisplacedPair(s);
+    backtrack(s, curStr, 0, 0, 0, pairToRemove.first, pairToRemove.second, res);
     return vector<string>(res.begin(), res.end());
   }
 
 private:
-  void backtrack(const string &s, string *curStr, int curPos, int left,
-                 int right, int *maxLen, set<string> &res) {
+  std::pair<int, int> getMisplacedPair(const string &str) {
+    int left = 0;
+    int right = 0;
+    for (size_t i = 0; i < str.size(); ++i) {
+      if (str[i] == '(') {
+        left++;
+      } else if (str[i] == ')') {
+        if (left > 0) {
+          left--;
+        } else {
+          right++;
+        }
+      }
+    }
+    return std::make_pair(left, right);
+  }
+
+  void backtrack(const string &s, string &curStr, int curPos, int left,
+                 int right, int leftTarget, int rightTarget, set<string> &res) {
     // base case
     if (curPos == s.size()) {
-      if ((left == right) && (curStr->size() >= *maxLen)) {
-        // cout << "left:" << left << ",right:" << right << ",curStr:" <<
-        // *curStr
-        //    << endl;
-        *maxLen = curStr->size();
-        res.insert(*curStr);
+      if ((left == right) && leftTarget == 0 && rightTarget == 0) {
+        res.insert(curStr);
       }
       return;
     }
-    if (left < right) {
+    if (left < right || leftTarget < 0 || rightTarget < 0) {
       return;
     }
-    // include current character
-    curStr->push_back(s[curPos]);
+    // include current (parenthese or character)
+    curStr.push_back(s[curPos]);
     if (s[curPos] == '(') {
-      backtrack(s, curStr, curPos + 1, left + 1, right, maxLen, res);
-    } else if (s[curPos] == ')' && left > right) {
-      backtrack(s, curStr, curPos + 1, left, right + 1, maxLen, res);
+      backtrack(s, curStr, curPos + 1, left + 1, right, leftTarget, rightTarget,
+                res);
+    } else if (s[curPos] == ')') {
+      backtrack(s, curStr, curPos + 1, left, right + 1, leftTarget, rightTarget,
+                res);
     } else if (s[curPos] != '(' && s[curPos] != ')') {
-      backtrack(s, curStr, curPos + 1, left, right, maxLen, res);
+      backtrack(s, curStr, curPos + 1, left, right, leftTarget, rightTarget,
+                res);
     }
-    curStr->pop_back();
-    // exclude current character
-    backtrack(s, curStr, curPos + 1, left, right, maxLen, res);
+    // backtrack
+    curStr.pop_back();
+    // exclude current parenthese
+    if (s[curPos] == '(') {
+      backtrack(s, curStr, curPos + 1, left, right, leftTarget - 1, rightTarget,
+                res);
+    } else if (s[curPos] == ')') {
+      backtrack(s, curStr, curPos + 1, left, right, leftTarget, rightTarget - 1,
+                res);
+    }
   }
 };
