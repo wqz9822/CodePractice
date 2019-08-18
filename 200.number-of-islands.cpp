@@ -49,7 +49,10 @@ public:
       for (size_t j = 0; j < grid[0].size(); ++j) {
         if (grid[i][j] == '1') {
           res++;
-          dfs(grid, i, j);
+          assert(bfsQueue_.empty());
+          grid[i][j] = '0';
+          bfsQueue_.emplace(i, j);
+          bfs(grid);
         }
       }
     }
@@ -58,18 +61,26 @@ public:
 
 private:
   const vector<pair<int, int>> DIRS{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+  queue<pair<int, int>> bfsQueue_;
 
   bool inBound(vector<vector<char>> &grid, int r, int c) {
     return (r >= 0 && r < grid.size() && c >= 0 && c < grid[0].size());
   }
 
-  void dfs(vector<vector<char>> &grid, int r, int c) {
-    if (!inBound(grid, r, c) || grid[r][c] != '1') {
-      return;
-    }
-    grid[r][c] = '0';
-    for (const auto &dir : DIRS) {
-      dfs(grid, r + dir.first, c + dir.second);
+  void bfs(vector<vector<char>> &grid) {
+    while (!bfsQueue_.empty()) {
+      const auto &top = bfsQueue_.front();
+      cout << "row:" << top.first << ",col:" << top.second << endl;
+      for (const auto &dir : DIRS) {
+        const auto r = top.first + dir.first;
+        const auto c = top.second + dir.second;
+        if (inBound(grid, r, c) && grid[r][c] == '1') {
+          // note: mark neighbour points as visited
+          grid[r][c] = '0';
+          bfsQueue_.emplace(r, c);
+        }
+      }
+      bfsQueue_.pop();
     }
   }
 };
