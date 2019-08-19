@@ -41,18 +41,66 @@
  * Output: 3
  *
  */
+class UnionFind {
+public:
+  explicit UnionFind(size_t n) {
+    parent_.resize(n, -1);
+    rank_.resize(n, 0);
+  }
+
+  void join(int idx1, int idx2) {
+    if (rank_[idx1] < rank_[idx2]) {
+      swap(idx1, idx2);
+    }
+    parent_[idx2] = find(idx1);
+    if (rank_[idx1] == rank_[idx2]) {
+      rank_[idx1]++;
+    }
+  }
+
+  int find(int idx) {
+    if (parent_[idx] == -1) {
+      return idx;
+    }
+    // path compression
+    return parent_[idx] = find(parent_[idx]);
+  }
+
+private:
+  vector<int> parent_;
+  vector<int> rank_;
+};
+
 class Solution {
 public:
   int numIslands(vector<vector<char>> &grid) {
+    if (grid.empty() || grid[0].empty()) {
+      return 0;
+    }
+    size_t rowNum = grid.size();
+    size_t colNum = grid[0].size();
+    UnionFind uf(rowNum * colNum);
     int res = 0;
     for (size_t i = 0; i < grid.size(); ++i) {
       for (size_t j = 0; j < grid[0].size(); ++j) {
-        if (grid[i][j] == '1') {
-          res++;
-          assert(bfsQueue_.empty());
-          grid[i][j] = '0';
-          bfsQueue_.emplace(i, j);
-          bfs(grid);
+        if (grid[i][j] == '0') {
+          continue;
+        }
+        res++;
+        const auto idx1 = i * colNum + j;
+        for (const auto &dir : DIRS) {
+          const auto r = i + dir.first;
+          const auto c = j + dir.second;
+          const auto idx2 = r * colNum + c;
+          if (inBound(grid, r, c) && grid[r][c] == '1') {
+            auto root1 = uf.find(idx1);
+            auto root2 = uf.find(idx2);
+            if (root1 != root2) {
+              // note: join the root nodes, not idx
+              uf.join(root1, root2);
+              res--;
+            }
+          }
         }
       }
     }
@@ -60,27 +108,9 @@ public:
   }
 
 private:
-  const vector<pair<int, int>> DIRS{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
-  queue<pair<int, int>> bfsQueue_;
+  const vector<pair<int, int>> DIRS{{1, 0}, {0, 1}};
 
   bool inBound(vector<vector<char>> &grid, int r, int c) {
     return (r >= 0 && r < grid.size() && c >= 0 && c < grid[0].size());
-  }
-
-  void bfs(vector<vector<char>> &grid) {
-    while (!bfsQueue_.empty()) {
-      const auto &top = bfsQueue_.front();
-      cout << "row:" << top.first << ",col:" << top.second << endl;
-      for (const auto &dir : DIRS) {
-        const auto r = top.first + dir.first;
-        const auto c = top.second + dir.second;
-        if (inBound(grid, r, c) && grid[r][c] == '1') {
-          // note: mark neighbour points as visited
-          grid[r][c] = '0';
-          bfsQueue_.emplace(r, c);
-        }
-      }
-      bfsQueue_.pop();
-    }
   }
 };
