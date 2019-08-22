@@ -15,10 +15,10 @@
  * order among letters are unknown to you. You receive a list of non-empty
  * words from the dictionary, where words are sorted lexicographically by the
  * rules of this new language. Derive the order of letters in this language.
- * 
+ *
  * Example 1:
- * 
- * 
+ *
+ *
  * Input:
  * [
  * ⁠ "wrt",
@@ -27,52 +27,137 @@
  * ⁠ "ett",
  * ⁠ "rftt"
  * ]
- * 
+ *
  * Output: "wertf"
- * 
- * 
+ *
+ *
  * Example 2:
- * 
- * 
+ *
+ *
  * Input:
  * [
  * ⁠ "z",
  * ⁠ "x"
  * ]
- * 
+ *
  * Output: "zx"
- * 
- * 
+ *
+ *
  * Example 3:
- * 
- * 
+ *
+ *
  * Input:
  * [
  * ⁠ "z",
  * ⁠ "x",
  * ⁠ "z"
- * ] 
- * 
+ * ]
+ *
  * Output: "" 
- * 
+ *
  * Explanation: The order is invalid, so return "".
- * 
- * 
+ *
+ *
  * Note:
- * 
- * 
+ *
+ *
  * You may assume all letters are in lowercase.
  * You may assume that if a is a prefix of b, then a must appear before b in
  * the given dictionary.
  * If the order is invalid, return an empty string.
  * There may be multiple valid order of letters, return any one of them is
  * fine.
- * 
- * 
+ *
+ *
  */
+class Graph {
+public:
+  void addVert(char v) {
+    if (list_.count(v) == 0) {
+      list_.emplace(v, std::unordered_set<char>());
+    }
+  }
+
+  void addEdge(char src, char dst) {
+    addVert(src);
+    addVert(dst);
+    list_[dst].insert(src);
+  }
+
+  vector<char> topoSort() {
+    vector<char> res;
+    char minVert = 0;
+    while (!list_.empty()) {
+      // find min degree node
+      bool hasLoop = true;
+      for (const auto &item : list_) {
+        if (item.second.size() == 0) {
+          minVert = item.first;
+          hasLoop = false;
+          break;
+        }
+      }
+      if (hasLoop) {
+        return vector<char>();
+      }
+      // erase node from all dst
+      for (auto &item : list_) {
+        if (item.second.count(minVert) != 0) {
+          item.second.erase(minVert);
+        }
+      }
+      res.push_back(minVert);
+      list_.erase(minVert);
+    }
+    return res;
+  }
+
+  void printList() {
+    for (const auto &item : list_) {
+      cout << item.first << ": ";
+      for (const auto &dst : item.second) {
+        cout << dst << ",";
+      }
+      cout << endl;
+    }
+  }
+
+private:
+  std::unordered_map<char, unordered_set<char>> list_;
+};
+
 class Solution {
 public:
-    string alienOrder(vector<string>& words) {
-        
+  string alienOrder(vector<string> &words) {
+    // for every adjcent word
+    // find first diff char a, b
+    // add edge: b->a
+    // topo sort
+    Graph g;
+    for (const auto &word : words) {
+      for (const auto &l : word) {
+        g.addVert(l);
+      }
     }
+    for (size_t i = 0; i < words.size() - 1; ++i) {
+      auto idx = findFirstDiff(words[i], words[i + 1]);
+      if (idx >= 0) {
+        g.addEdge(words[i][idx], words[i + 1][idx]);
+      }
+    }
+    const auto order = g.topoSort();
+    return std::string(order.begin(), order.end());
+  }
+
+private:
+  int findFirstDiff(const string &a, const string &b) {
+    size_t len = min(a.size(), b.size());
+    for (size_t i = 0; i < len; ++i) {
+      if (a[i] != b[i]) {
+        return i;
+      }
+    }
+    // a is a prefix of b, no order can be infered
+    return -1;
+  }
 };
