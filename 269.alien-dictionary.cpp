@@ -81,10 +81,46 @@ public:
   void addEdge(char src, char dst) {
     addVert(src);
     addVert(dst);
-    list_[dst].insert(src);
+    list_[src].insert(dst);
   }
 
   vector<char> topoSort() {
+    vector<char> finalPath;
+    unordered_set<char> curPath;
+    unordered_set<char> visited;
+    for (const auto &vert : list_) {
+      // assert(curPath.empty());
+      if (visited.count(vert.first) == 0 &&
+          !topoSortDFS(vert.first, curPath, finalPath, visited)) {
+        return vector<char>();
+      }
+    }
+    return vector<char>(finalPath.rbegin(), finalPath.rend());
+  }
+
+  bool topoSortDFS(char cur, unordered_set<char> &curPath,
+                   vector<char> &finalPath, unordered_set<char> &visited) {
+    for (const auto &n : list_[cur]) {
+      if (curPath.count(n) != 0) {
+        // loop found
+        return false;
+      }
+      if (visited.count(n) == 0) {
+        // cout << n << " -> ";
+        curPath.insert(n);
+        if (!topoSortDFS(n, curPath, finalPath, visited)) {
+          return false;
+        }
+        curPath.erase(n);
+      }
+    }
+    // note: mark visited after traverse all neighbours
+    visited.insert(cur);
+    finalPath.push_back(cur);
+    return true;
+  }
+
+  vector<char> topoSortBFS() {
     vector<char> res;
     char minVert = 0;
     while (!list_.empty()) {
@@ -145,8 +181,8 @@ public:
         g.addEdge(words[i][idx], words[i + 1][idx]);
       }
     }
-    const auto order = g.topoSort();
-    return std::string(order.begin(), order.end());
+    const auto finalPath = g.topoSort();
+    return std::string(finalPath.begin(), finalPath.end());
   }
 
 private:
