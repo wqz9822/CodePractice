@@ -9,35 +9,36 @@
  * Medium (27.63%)
  * Total Accepted:    236.1K
  * Total Submissions: 844.5K
- * Testcase Example:  '{"$id":"1","neighbors":[{"$id":"2","neighbors":[{"$ref":"1"},{"$id":"3","neighbors":[{"$ref":"2"},{"$id":"4","neighbors":[{"$ref":"3"},{"$ref":"1"}],"val":4}],"val":3}],"val":2},{"$ref":"4"}],"val":1}'
+ * Testcase Example:
+ * '{"$id":"1","neighbors":[{"$id":"2","neighbors":[{"$ref":"1"},{"$id":"3","neighbors":[{"$ref":"2"},{"$id":"4","neighbors":[{"$ref":"3"},{"$ref":"1"}],"val":4}],"val":3}],"val":2},{"$ref":"4"}],"val":1}'
  *
  * Given a reference of a node in a connected undirected graph, return a deep
  * copy (clone) of the graph. Each node in the graph contains a val (int) and a
  * list (List[Node]) of its neighbors.
- * 
- * 
- * 
+ *
+ *
+ *
  * Example:
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
  * Input:
- * 
+ *
  * {"$id":"1","neighbors":[{"$id":"2","neighbors":[{"$ref":"1"},{"$id":"3","neighbors":[{"$ref":"2"},{"$id":"4","neighbors":[{"$ref":"3"},{"$ref":"1"}],"val":4}],"val":3}],"val":2},{"$ref":"4"}],"val":1}
- * 
+ *
  * Explanation:
  * Node 1's value is 1, and it has two neighbors: Node 2 and 4.
  * Node 2's value is 2, and it has two neighbors: Node 1 and 3.
  * Node 3's value is 3, and it has two neighbors: Node 2 and 4.
  * Node 4's value is 4, and it has two neighbors: Node 1 and 3.
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
  * Note:
- * 
- * 
+ *
+ *
  * The number of nodes will be between 1 and 100.
  * The undirected graph is a simple graph, which means no repeated edges and no
  * self-loops in the graph.
@@ -45,8 +46,8 @@
  * must have node p as neighbor too.
  * You must return the copy of the given node as a reference to the cloned
  * graph.
- * 
- * 
+ *
+ *
  */
 /*
 // Definition for a Node.
@@ -65,7 +66,18 @@ public:
 */
 class Solution {
 public:
-    Node* cloneGraph(Node* node) {
-        
+  Node *cloneGraph(Node *node) {
+    if (!node) {
+      return nullptr;
     }
+    root = std::make_unique<Node>();
+    std::unordered_set<int> hasVisited;
+    cloneHelper(node, root.get(), hasVisited);
+    return root.get();
+  }
+
+private:
+  std::unique_ptr<Node> root;
+  void cloneHelper(Node *inNode, Node *outNode,
+                   std::unordered_set<int> &hasVisited) {}
 };
