@@ -70,14 +70,24 @@ public:
     if (!node) {
       return nullptr;
     }
-    root = std::make_unique<Node>();
-    std::unordered_set<int> hasVisited;
-    cloneHelper(node, root.get(), hasVisited);
-    return root.get();
+    std::unordered_map<int, Node *> hasVisited;
+    return cloneHelper(node, hasVisited);
   }
 
 private:
-  std::unique_ptr<Node> root;
-  void cloneHelper(Node *inNode, Node *outNode,
-                   std::unordered_set<int> &hasVisited) {}
+  Node *cloneHelper(const Node *inNode,
+                    std::unordered_map<int, Node *> &hasVisited) {
+    Node *outNode = new Node();
+    outNode->val = inNode->val;
+    hasVisited[outNode->val] = outNode;
+    for (const auto &n : inNode->neighbors) {
+      if (hasVisited.count(n->val) == 0) {
+        outNode->neighbors.push_back(cloneHelper(n, hasVisited));
+      } else {
+        // note: insert pointer to newly copied node
+        outNode->neighbors.push_back(hasVisited[n->val]);
+      }
+    }
+    return outNode;
+  }
 };
