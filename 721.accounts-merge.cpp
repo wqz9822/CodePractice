@@ -63,9 +63,7 @@ struct Account {
     emails = std::set(entry.begin() + 1, entry.end());
   }
 
-  void mergeAcnt(const Account *other) {
-    emails.insert(other->emails.begin(), other->emails.end());
-  }
+  void mergeAcnt(Account *other) { emails.merge(other->emails); }
 
   std::vector<string> toList() {
     std::vector<std::string> res;
@@ -82,37 +80,41 @@ struct Account {
 class Solution {
 public:
   vector<vector<string>> accountsMerge(vector<vector<string>> &accounts) {
-    // get all prev encountered accounts
-    // merge accounts into new one
-    // replace emailList with new account
-    unordered_map<int, std::unique_ptr<Account>> acntList;
-    unordered_map<std::string, int> emailList;
-    int uniqueAcnts = 0;
-    for (const auto &entry : accounts) {
-      std::vector<int> oldAcnts;
-      for (size_t i = 1; i < entry.size(); ++i) {
-        if (emailList.count(entry[i]) != 0) {
-          oldAcnts.push_back(emailList[entry[i]]);
-        }
+    // build a graph
+    // connect all emails to the first emails
+
+    unordered_map<string, unordered_set<string>> graph;
+    unordered_map<string, string> nameMap;
+    for (const auto &acnt : accounts) {
+      for (size_t i = 1; i < acnt.size(); ++i) {
+        nameMap[acnt[i]] = acnt[0];
+        graph[acnt[1]].insert(acnt[i]);
+        graph[acnt[i]].insert(acnt[1]);
       }
-      auto newAcnt = std::make_unique<Account>(++uniqueAcnts, entry);
-      if (!oldAcnts.empty()) {
-        for (const auto &id : oldAcnts) {
-          assert(acntList[id]->name == entry[0]);
-          newAcnt->mergeAcnt(acntList[id].get());
-        }
-        for (const auto &id : oldAcnts) {
-          acntList.erase(id);
-        }
-      }
-      for (const auto &email : newAcnt->emails) {
-        emailList[email] = newAcnt->uniqueId;
-      }
-      acntList.emplace(newAcnt->uniqueId, std::move(newAcnt));
     }
     vector<vector<string>> res;
-    for (const auto &account : acntList) {
-      res.push_back(account.second->toList());
+    unordered_set<string> visited;
+    for (const auto &node : graph) {
+      if (visited.count(node.first) == 0) {
+        visited.insert(node.first);
+        // bfs or dfs to iterate all neighbors
+        queue<string> nodeQue;
+        vector<string> nodeList;
+        nodeQue.push(node.first);
+        nodeList.push_back(nameMap[node.first]);
+        while (!nodeQue.empty()) {
+          nodeList.push_back(std::move(nodeQue.front()));
+          nodeQue.pop();
+          for (const auto &nei : graph[nodeList.back()]) {
+            if (visited.count(nei) == 0) {
+              visited.insert(nei);
+              nodeQue.push(nei);
+            }
+          }
+        }
+        std::sort(nodeList.begin() + 1, nodeList.end());
+        res.push_back(std::move(nodeList));
+      }
     }
     return res;
   }
