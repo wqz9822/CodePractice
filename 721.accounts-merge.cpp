@@ -56,66 +56,46 @@
  *
  */
 
-struct Account {
-  explicit Account(int id, const vector<string> &entry) {
-    uniqueId = id;
-    name = entry[0];
-    emails = std::set(entry.begin() + 1, entry.end());
+class UnionFind {
+public:
+  UnionFind() { parent_.resize(10000, -1); }
+
+  void union(int a, int b) { parent_[a] = find(a); }
+
+  int find(int a) {
+    if (parent_[a] == -1) {
+      return a;
+    }
+    return parent_[a] = find(parent_[a]);
   }
 
-  void mergeAcnt(Account *other) { emails.merge(other->emails); }
-
-  std::vector<string> toList() {
-    std::vector<std::string> res;
-    res.push_back(name);
-    std::copy(emails.begin(), emails.end(), std::back_inserter(res));
-    return res;
-  }
-
-  int uniqueId;
-  std::string name;
-  std::set<std::string> emails;
-};
+private:
+  vector<int> parent_;
+}
 
 class Solution {
 public:
   vector<vector<string>> accountsMerge(vector<vector<string>> &accounts) {
-    // build a graph
+    // assign each unique email with a unique id
     // connect all emails to the first emails
 
-    unordered_map<string, unordered_set<string>> graph;
-    unordered_map<string, string> nameMap;
+    unordered_map<int, unordered_set<string>> idMap;
+    unordered_map<int, string> nameMap;
+    UnionFind uf;
+
+    int idx = 1;
     for (const auto &acnt : accounts) {
       for (size_t i = 1; i < acnt.size(); ++i) {
-        nameMap[acnt[i]] = acnt[0];
-        graph[acnt[1]].insert(acnt[i]);
-        graph[acnt[i]].insert(acnt[1]);
-      }
-    }
-    vector<vector<string>> res;
-    unordered_set<string> visited;
-    for (const auto &node : graph) {
-      if (visited.count(node.first) == 0) {
-        visited.insert(node.first);
-        // bfs or dfs to iterate all neighbors
-        queue<string> nodeQue;
-        vector<string> nodeList;
-        nodeQue.push(node.first);
-        nodeList.push_back(nameMap[node.first]);
-        while (!nodeQue.empty()) {
-          nodeList.push_back(std::move(nodeQue.front()));
-          nodeQue.pop();
-          for (const auto &nei : graph[nodeList.back()]) {
-            if (visited.count(nei) == 0) {
-              visited.insert(nei);
-              nodeQue.push(nei);
-            }
-          }
+        if (idMap.count(acnt[i]) == 0) {
+          int parent = uf.find(idx);
+          idMap[idx].insert(acnt[i]);
+          nameMap[idx] = acnt[0];
+          idx++;
         }
-        std::sort(nodeList.begin() + 1, nodeList.end());
-        res.push_back(std::move(nodeList));
       }
     }
+
+    vector<vector<string>> res;
     return res;
   }
 };
