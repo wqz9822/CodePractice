@@ -57,8 +57,8 @@
  */
 
 struct UnionFind {
-  UnionFind() {
-    parent.resize(10000);
+  explicit UnionFind(int num) {
+    parent.resize(num);
     std::iota(parent.begin(), parent.end(), 0);
   }
 
@@ -87,36 +87,33 @@ public:
     // assign each unique email with a unique id
     // connect all emails to the first emails
 
-    unordered_map<std::string, int> emailMap;
-    unordered_map<int, std::string> idMap;
+    unordered_map<std::string, int> emailToIdx;
+    unordered_map<int, std::string> idxToEmail;
     unordered_map<int, string> nameMap;
-    UnionFind uf;
+    int num = 0;
+    for (size_t i = 0; i < accounts.size(); ++i) {
+      num += accounts[i].size();
+    }
+    UnionFind uf(num);
 
     int firstIdx = 0;
     int idx = 0;
 
     for (const auto &acnt : accounts) {
       firstIdx = idx;
-      bool hasAdd = false;
       for (size_t i = 1; i < acnt.size(); ++i) {
-        if (emailMap.count(acnt[i]) == 0) {
-          hasAdd = true;
-          emailMap[acnt[i]] = idx;
-          idMap[idx] = acnt[i];
+        if (emailToIdx.count(acnt[i]) == 0) {
+          emailToIdx[acnt[i]] = idx;
+          idxToEmail[idx] = acnt[i];
           uf.join(firstIdx, idx);
           nameMap[idx] = acnt[0];
-          idx++;
         } else {
-          int oldIdx = emailMap[acnt[i]];
+          int oldIdx = emailToIdx[acnt[i]];
           uf.join(firstIdx, oldIdx);
         }
-      }
-      if (!hasAdd) {
         idx++;
       }
     }
-
-    std::unordered_map<int, std::set<std::string>> out;
 
     /*
     cout << "uf result" << endl;
@@ -125,9 +122,10 @@ public:
     }
     */
 
+    std::unordered_map<int, std::set<std::string>> out;
     for (size_t i = 0; i < idx; ++i) {
-      if (idMap.count(i) != 0) {
-        out[uf.find(i)].insert(idMap[i]);
+      if (idxToEmail.count(i) != 0) {
+        out[uf.find(i)].insert(idxToEmail[i]);
       }
     }
 
