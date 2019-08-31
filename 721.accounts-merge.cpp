@@ -56,22 +56,30 @@
  *
  */
 
-class UnionFind {
-public:
-  UnionFind() { parent_.resize(10000, -1); }
-
-  void union(int a, int b) { parent_[a] = find(a); }
-
-  int find(int a) {
-    if (parent_[a] == -1) {
-      return a;
-    }
-    return parent_[a] = find(parent_[a]);
+struct UnionFind {
+  UnionFind() {
+    parent.resize(10000);
+    std::iota(parent.begin(), parent.end(), 0);
   }
 
-private:
-  vector<int> parent_;
-}
+  void join(int a, int b) {
+    int pa = find(a);
+    int pb = find(b);
+    if (pa != pb) {
+      // cout << "joining:" << a << ", " << b << endl;
+      parent[pa] = pb;
+    }
+  }
+
+  int find(int a) {
+    if (parent[a] == a) {
+      return a;
+    }
+    return parent[a] = find(parent[a]);
+  }
+
+  vector<int> parent;
+};
 
 class Solution {
 public:
@@ -79,23 +87,57 @@ public:
     // assign each unique email with a unique id
     // connect all emails to the first emails
 
-    unordered_map<int, unordered_set<string>> idMap;
+    unordered_map<std::string, int> emailMap;
+    unordered_map<int, std::string> idMap;
     unordered_map<int, string> nameMap;
     UnionFind uf;
 
-    int idx = 1;
+    int firstIdx = 0;
+    int idx = 0;
+
     for (const auto &acnt : accounts) {
+      firstIdx = idx;
+      bool hasAdd = false;
       for (size_t i = 1; i < acnt.size(); ++i) {
-        if (idMap.count(acnt[i]) == 0) {
-          int parent = uf.find(idx);
-          idMap[idx].insert(acnt[i]);
+        if (emailMap.count(acnt[i]) == 0) {
+          hasAdd = true;
+          emailMap[acnt[i]] = idx;
+          idMap[idx] = acnt[i];
+          uf.join(firstIdx, idx);
           nameMap[idx] = acnt[0];
           idx++;
+        } else {
+          int oldIdx = emailMap[acnt[i]];
+          uf.join(firstIdx, oldIdx);
         }
+      }
+      if (!hasAdd) {
+        idx++;
+      }
+    }
+
+    std::unordered_map<int, std::set<std::string>> out;
+
+    /*
+    cout << "uf result" << endl;
+    for (size_t i = 0; i < idx; ++i) {
+      cout << uf.parent[i] << ", ";
+    }
+    */
+
+    for (size_t i = 0; i < idx; ++i) {
+      if (idMap.count(i) != 0) {
+        out[uf.find(i)].insert(idMap[i]);
       }
     }
 
     vector<vector<string>> res;
+    for (const auto &item : out) {
+      res.emplace_back();
+      res.back().push_back(nameMap[item.first]);
+      std::copy(item.second.begin(), item.second.end(),
+                std::back_inserter(res.back()));
+    }
     return res;
   }
 };
