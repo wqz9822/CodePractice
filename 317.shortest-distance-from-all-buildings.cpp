@@ -46,7 +46,7 @@
  * house according to the above rules, return -1.
  *
  */
-Point {
+struct Point {
   Point(int x_, int y_, int dist_ = 0) : x(x_), y(y_), dist(dist_) {}
   bool operator=(const Point &other) {
     return (this.x == other.x && this.y == other.y);
@@ -77,7 +77,7 @@ public:
       }
     }
     for (const auto &src : locations) {
-      const auto  dist = findDist(grid, src, dst);
+      const auto dist = findDist(grid, src, houses);
       if (dist < minDist) {
         minDist = dist;
       }
@@ -88,7 +88,8 @@ public:
 private:
   const vector<pair<int, int>> dirs{{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
 
-  int getDist(const Map &map, const Point &src, const Point &dst) {
+  int getDist(const Map &map, const Point &src, std::unordered_set<Point> dst,
+              const std::unordered_set<Point> &obs) {
     // TODO custom hash
     unordered_set<Point> hasVisited;
     int res;
@@ -101,19 +102,23 @@ private:
         continue;
       }
       hasVisited.insert(cur);
-      // if reach dst or obstacle
+      // if reach dst
       if (dst.count(cur) != 0) {
         res += cur.dist;
+        dst.erase(cur);
         continue;
       }
       for (const auto &dir : dirs) {
         Point p(cur.x + dir.first, cur.y + dir.second, cur.dist + 1);
-        if (inBound(map, p)) {
+        if (inBound(map, p) && obs.count(p) == 0) {
           que.push(p);
         }
       }
     }
-    return minDist;
+    if (!dst.empty()) {
+      return -1;
+    }
+    return res;
   }
 
   size_t getIdx(const Map &map, const Point &p) {
