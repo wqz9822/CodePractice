@@ -44,28 +44,22 @@ public:
     if (!root) {
       return res;
     }
-    std::queue<std::pair<int, TreeNode *>> nodeQueue;
-    nodeQueue.push(std::make_pair(0, root));
-    int level = 0;
-    TreeNode *prev = nullptr;
-    while (!nodeQueue.empty()) {
-      auto cur = nodeQueue.front();
-      nodeQueue.pop();
-      if (cur.first > level && prev) {
-        res.push_back(prev->val);
-        level = cur.first;
-      }
-      if (cur.second->left) {
-        nodeQueue.push(std::make_pair(cur.first + 1, cur.second->left));
-      }
-      if (cur.second->right) {
-        nodeQueue.push(std::make_pair(cur.first + 1, cur.second->right));
-      }
-      prev = cur.second;
-    }
-    if (prev) {
-      res.push_back(prev->val);
-    }
+    int maxLevel = -1;
+    dfsHelper(root, res, 0, maxLevel);
     return res;
+  }
+
+private:
+  void dfsHelper(TreeNode *node, vector<int> &res, int curLevel,
+                 int &maxLevel) {
+    if (!node) {
+      return;
+    }
+    if (curLevel > maxLevel) {
+      res.push_back(node->val);
+      maxLevel = curLevel;
+    }
+    dfsHelper(node->right, res, curLevel + 1, maxLevel);
+    dfsHelper(node->left, res, curLevel + 1, maxLevel);
   }
 };
