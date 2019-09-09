@@ -60,18 +60,22 @@ public:
     for (const auto &c : p) {
       target[c]++;
     }
-    for (size_t i = 0; i <= s.size() - p.size(); ++i) {
-      unordered_map<char, int> temp;
-      for (size_t j = 0; j < p.size(); ++j) {
-        if (target.count(s[i + j]) == 0) {
-          i = i + j;
-          break;
-        }
-        temp[s[i + j]]++;
+    unordered_map<char, int> src;
+    for (size_t i = 0; i < p.size(); ++i) {
+      src[s[i]]++;
+    }
+    int front = 0;
+    int back = front + p.size() - 1;
+    while (back < s.size()) {
+      if (src == target) {
+        res.push_back(front);
       }
-      if (temp == target) {
-        res.push_back(i);
+      if (--src[s[front]] == 0) {
+        src.erase(s[front]);
       }
+      front++;
+      back++;
+      src[s[back]]++;
     }
     return res;
   }
