@@ -109,27 +109,23 @@ public:
     if (!root) {
       return res;
     }
-    int rootCol = 0;
-    TreeNode *cur = root;
-    while (cur->left) {
-      rootCol++;
-      cur = cur->left;
-    }
+    map<int, vector<int>> colMap;
     std::queue<std::pair<int, TreeNode *>> treeQ;
-    treeQ.push(make_pair(rootCol, root));
+    treeQ.push(make_pair(0, root));
     while (!treeQ.empty()) {
       auto cur = treeQ.front();
       treeQ.pop();
-      if (res.size() < cur.first + 1) {
-        res.resize(cur.first + 1);
-      }
-      res[cur.first].push_back(cur.second->val);
+      // cout << "cur:" << cur.first << endl;
+      colMap[cur.first].push_back(cur.second->val);
       if (cur.second->left) {
         treeQ.push(make_pair(cur.first - 1, cur.second->left));
       }
       if (cur.second->right) {
         treeQ.push(make_pair(cur.first + 1, cur.second->right));
       }
+    }
+    for (auto &item : colMap) {
+      res.push_back(std::move(item.second));
     }
     return res;
   }
