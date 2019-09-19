@@ -46,86 +46,36 @@
  * house according to the above rules, return -1.
  *
  */
-struct Point {
-  Point(int x_, int y_, int dist_ = 0) : x(x_), y(y_), dist(dist_) {}
-  bool operator=(const Point &other) {
-    return (this.x == other.x && this.y == other.y);
-  }
-  int x;
-  int y;
-  int dist;
-};
-
 class Solution {
 public:
-  using Map = vector<vector<int>>;
-  int shortestDistance(const Map &grid) {
-    int minDist = INT_MAX;
-    unordered_set<int> hasVisited;
-    vector<Point> houses;
-    vector<Point> obst;
-    vector<Point> locations;
-    for (size_t i = 0; i < grid.size(); ++i) {
-      for (size_t j = 0; j < grid[0].size(); ++j) {
-        if (grid[i][j] == 0) {
-          locations.emplace_back(i, j);
-        } else if (grid[i][j] == 1) {
-          houses.emplace_back(i, j);
-        } else if (grid[i][j] == 2) {
-          obst.emplace_back(i, j);
-        }
-      }
-    }
-    for (const auto &src : locations) {
-      const auto dist = findDist(grid, src, houses);
-      if (dist < minDist) {
-        minDist = dist;
-      }
-    }
-    return minDist;
+  int shortestDistance(vector<vector<int>> &grid) {
+
+    // from all builds, floodfill the board
+    // add all floodfill to get min
   }
 
 private:
-  const vector<pair<int, int>> dirs{{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
+  const std::vector<std::pair<int, int>> dirs{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
-  int getDist(const Map &map, const Point &src, std::unordered_set<Point> dst,
-              const std::unordered_set<Point> &obs) {
-    // TODO custom hash
-    unordered_set<Point> hasVisited;
-    int res;
-    std::queue<Point> que;
-    que.push(src);
-    while (!que.empty()) {
-      const auto cur = que.top();
-      que.pop();
-      if (hasVisited.count(cur) != 0) {
-        continue;
-      }
-      hasVisited.insert(cur);
-      // if reach dst
-      if (dst.count(cur) != 0) {
-        res += cur.dist;
-        dst.erase(cur);
-        continue;
-      }
-      for (const auto &dir : dirs) {
-        Point p(cur.x + dir.first, cur.y + dir.second, cur.dist + 1);
-        if (inBound(map, p) && obs.count(p) == 0) {
-          que.push(p);
+  void floodFill(vector<vector<int>> &grid, int startRow, int startCol) {
+    queue<pair<int, int>> q;
+    unordered_map<int> visited;
+    q.push(std::make_pair(startRow, startCol));
+    while (!q.empty()) {
+      auto cur = q.front();
+      q.pop();
+      for (const auto &d : dirs) {
+        auto r = cur.first + d.first;
+        auto c = cur.second + d.second;
+        auto idx = r * grid[0].size() + c;
+        if (visited.count(idx) == 0 && inBound(grid, r, c)) {
+          q.push(std::make_pair(r, c));
         }
       }
     }
-    if (!dst.empty()) {
-      return -1;
-    }
-    return res;
   }
 
-  size_t getIdx(const Map &map, const Point &p) {
-    return map.size() * p.x + p.y;
-  }
-
-  bool inBound(const Map &map, const Point &p) {
-    return (p.x >= 0 && p.x < map.size() && p.y >= 0 && p.y < map[0].size());
+  bool inBound(const vector<vector<int>> &grid, int r, int c) {
+    return (r >= 0 && r < grid.size() && c >= 0 && c < grid[0].size());
   }
 };
